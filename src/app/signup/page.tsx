@@ -3,16 +3,42 @@ import Link from "next/link";
 import { Shield } from "lucide-react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { SignUpType } from "@/types";
+import { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
+import { signupHandler } from "@/handlers/reglo";
 const SignupSchema = Yup.object().shape({
+  name: Yup.string().required("Full name is required"),
   email: Yup.string().email("Invalid email").required("Email is required"),
   password: Yup.string().required("Password is required"),
 });
 
 export default function Signup() {
-  const handleSignup = (values: { email: string; password: string }) => {
-    // Signup logic will be implemented later
-    console.log("Signup attempt", values);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [message, setMessage] = useState<string | undefined>("");
+  const route = useRouter();
+  const handleSignup = async (values: SignUpType) => {
+    setLoading(true);
+    try {
+      const resp = await signupHandler(values);
+
+      if (resp?.status == 201) {
+        toast.success(resp.message, {
+          duration: 6000,
+          position: "top-center",
+        });
+        route.push("/hifazat");
+      }
+      if (resp?.status == 409) {
+        setMessage("User already exists");
+      }
+    } catch (error: any) {
+      setMessage(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -23,29 +49,34 @@ export default function Signup() {
           <h1 className="text-2xl font-semibold text-black">Welcome!</h1>
 
           <Formik
-            initialValues={{ fullName: "", email: "", password: "" }}
+            initialValues={{
+              name: "",
+              email: "",
+              password: "",
+              whereTo: "signin",
+            }}
             validationSchema={SignupSchema}
             onSubmit={handleSignup}
           >
             {({ errors, touched }) => (
               <Form className="w-full space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-600" htmlFor="fullName">
+                  <label className="text-sm text-gray-600" htmlFor="name">
                     Full Name
                   </label>
                   <Field
-                    id="fullName"
-                    name="fullName"
-                    type="fullName"
+                    id="name"
+                    name="name"
+                    type="text"
                     placeholder="Enter your full name..."
                     className={`w-full px-3 py-2 border rounded-md outline-none focus:ring-2 focus:ring-orange-500 ${
-                      errors.fullName && touched.fullName
+                      errors.name && touched.name
                         ? "border-red-500"
                         : "border-gray-300"
                     }`}
                   />
                   <ErrorMessage
-                    name="fullName"
+                    name="name"
                     component="div"
                     className="text-red-500 text-sm"
                   />
@@ -95,15 +126,23 @@ export default function Signup() {
                 </div>
 
                 <button
+                  disabled={loading}
                   type="submit"
-                  className="w-full py-2 px-4 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+                  className={`w-full py-2 px-4 ${
+                    loading && "bg-[#121212]"
+                  } bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2`}
                 >
-                  Login
+                  {loading ? "Signing Up..." : "Sign Up"}
                 </button>
               </Form>
             )}
           </Formik>
-
+          <Toaster />
+          {message && (
+            <div className="error bg-red-500 px-6 py-2 text-white">
+              {message}
+            </div>
+          )}
           <p className="text-sm text-gray-500">
             Already have an account?{" "}
             <Link href="/login" className="text-orange-500 hover:underline">

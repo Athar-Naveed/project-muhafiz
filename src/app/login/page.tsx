@@ -3,16 +3,41 @@ import Link from "next/link";
 import { Shield } from "lucide-react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-
+import { LoginType } from "@/types";
+import { loginHandler } from "@/handlers/reglo";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 const LoginSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Email is required"),
   password: Yup.string().required("Password is required"),
 });
 
 export default function Login() {
-  const handleLogin = (values: { email: string; password: string }) => {
-    // Login logic will be implemented later
-    console.log("Login attempt", values);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [message, setMessage] = useState<string>("");
+  const route = useRouter();
+  const handleLogin = async (values: LoginType) => {
+    setLoading(true);
+    try {
+      const resp = await loginHandler(values);
+
+      if (resp.status == 200) {
+        toast.success("Welcome to Hifazat!", {
+          duration: 3000,
+          position: "top-center",
+        });
+
+        route.push("/hifazat");
+      } else if (resp.status == 401) {
+        setMessage(resp.response.error);
+      }
+    } catch (error: any) {
+      setMessage(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -23,7 +48,7 @@ export default function Login() {
           <h1 className="text-2xl font-semibold text-black">Welcome Back</h1>
 
           <Formik
-            initialValues={{ email: "", password: "" }}
+            initialValues={{ email: "", password: "", whereTo: "login" }}
             validationSchema={LoginSchema}
             onSubmit={handleLogin}
           >
@@ -74,15 +99,23 @@ export default function Login() {
                 </div>
 
                 <button
+                  disabled={loading}
                   type="submit"
-                  className="w-full py-2 px-4 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+                  className={`w-full py-2 px-4 ${
+                    loading && "bg-[#121212]"
+                  } bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2`}
                 >
-                  Login
+                  {loading ? "Logging in..." : "Login"}
                 </button>
               </Form>
             )}
           </Formik>
-
+          <Toaster />
+          {message && (
+            <div className="error bg-red-500 px-6 py-2 text-white">
+              {message}
+            </div>
+          )}
           <p className="text-sm text-gray-500">
             Don&apos;t have an account?
             <Link href="/signup" className="text-orange-500 hover:underline">
