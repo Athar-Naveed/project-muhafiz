@@ -3,8 +3,8 @@
 // Imports
 // ------------------------
 import { useCallback, useState, useRef, useEffect } from "react";
-import { Send, WandSparkles } from "lucide-react";
-
+import { Send } from "lucide-react";
+// , WandSparkles
 import { ChatbotMessageType } from "@/types";
 import ChatbotMessages from "./Messages";
 import { chatbotChat, fetchChatHistory } from "@/handlers/chatbot";
@@ -52,11 +52,11 @@ const ChatBotChat = () => {
           ];
           setMessages([...initialMessage, ...resp]);
         }
-      } catch (error) {
+      } catch (error: any) {
         setMessages([
           {
             role: "Hifazat",
-            content: `Hifazat is facing difficulties while fetching your chats! Please try refreshing the page!`,
+            content: `Hifazat is facing difficulties while fetching your chats! Please try refreshing the page! ${error.message}`,
           },
         ]);
       }
@@ -117,13 +117,13 @@ const ChatBotChat = () => {
         ...prevMessages.filter((msg) => msg.content !== "Thinking"),
         botResponse,
       ]);
-    } catch (error) {
+    } catch (error: any) {
       setMessages((prevMessages) => [
         ...prevMessages.filter((msg) => msg.content !== "Thinking"),
         {
           role: "Hifazat",
           category: "chat",
-          content: "Sorry, an error occurred. Please try again.",
+          content: `Sorry, an error occurred. Please try again. ${error.message}`,
         },
       ]);
     } finally {

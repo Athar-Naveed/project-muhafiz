@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
           { status: 409 }
         );
       } else {
-        const user = await db.insert(registeredUsers).values({
+        await db.insert(registeredUsers).values({
           fullName: name,
           email: email,
           password: hashedPassword,

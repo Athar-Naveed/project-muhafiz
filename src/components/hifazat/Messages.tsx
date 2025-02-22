@@ -148,4 +148,5 @@ const ChatbotMessages = memo(
   }
 );
 
+ChatbotMessages.displayName = "ChatbotMessages";
 export default ChatbotMessages;
